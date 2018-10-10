@@ -80,25 +80,57 @@ field = [cell_0, cell_1, cell_2, cell_3, cell_4, cell_5, cell_6, cell_7, cell_8,
 if __name__ == '__main__':
     import random
     player_1 = Player('Anton')
+    player_2 = Player('Donald')
+
+    players = [player_1, player_2]
 
     player_1.info()
+    player_2.info()
 
     while True:
-        input('\nХодить!')
-        player_1.move()
-        player_1.info()
+        for i in range(len(players)):
+            input('\n{}, ходи!'.format(players[i].name))
+            players[i].move()
+            players[i].info()  # инфа про игрока
 
-        field[player_1.position].info()
+            field[players[i].position].info()  # вся инфа про клетку, куда наступил игрок
 
-        choose = input('[1] Купить [2] Пас\n')
-        if choose == '1':
-            field[player_1.position].purchase(player_1.name)
-            player_1.money -= field[player_1.position].price
+            if field[players[i].position].owner is None:
+                """ Если клетка еще не куплена """
+                while True:
+                    choose = input('[1] Купить [2] Пас\n')
+                    if choose == '1':
+                        field[players[i].position].purchase(players[i].name)
+                        players[i].money -= field[players[i].position].price
+                        break
+                    elif choose == '2':
+                        break
+                    else:
+                        continue
 
-        elif choose == '2':
-            pass
+            elif field[players[i].position].owner == players[i].name:
+                """ Если клетка уже куплена вами """
+                print('Это ваша клетка')
+                while True:
+                    choose = input('[1] Улучшить [2] Пас\n')
+                    # Тут будет функционал улучшение клетки. По типу постройки домов в оригинальной монополии
+                    # Но улучшать можно только когда вы на своей клетке
+                    if choose == '1':
+                        print('Улучшение пока недоступно!')
+                        break
+                    elif choose == '2':
+                        break
+                    else:
+                        continue
 
-        else:
-            print('[1] Купить [2] Пас')
+            else:
+                """ Если клетка куплена кем-то другим """
+                rent = int(field[players[i].position].price*0.1)  # арендая плата = 10% цены клетки
+                print('Вы заплатили {}'.format(rent))
+                players[i].money -= rent  # забираем у того, кто наступил на чужую клетку арендную плату
 
-        player_1.info()
+                for p in players:  # ищим владельца клетки по имени (В игре должны быть разные имена!!!)
+                    if p.name == field[players[i].position].owner:  # нашли владельца - отдаем ему бабки
+                        p.money += rent
+
+            players[i].info()
