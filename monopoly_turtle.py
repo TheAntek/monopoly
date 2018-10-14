@@ -28,6 +28,10 @@ def step(player):
     player.forward(65)
 
 
+def turn_right(player):
+    player.right(90)
+
+
 if __name__ == '__main__':
 
     window = turtle.Screen()
@@ -40,10 +44,10 @@ if __name__ == '__main__':
     first_move(player_2, 20, 'Chris')
 
     window.onkeypress(lambda: step(player_1), 'g')
-    window.listen()
-
     window.onkeypress(lambda: step(player_2), 'h')
-    window.listen()
+    # window.onkeypress(lambda: turn_right(player_1), 'r')
+    # window.onkeypress(lambda: turn_right(player_2), 't')
 
+    window.listen()
 
     window.exitonclick()
