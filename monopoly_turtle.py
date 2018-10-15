@@ -1,7 +1,47 @@
 import turtle
-from monopoly.main import *
 from monopoly.mapa import *
 import random
+
+
+class Cell:
+    """ Клас клетки. Имеет название, позицию на поле, цену покупки и владельца"""
+    def __init__(self, title, position, price):
+        self.owner = None
+        self.name = title
+        self.position = position
+        self.price = price
+
+    def info(self):
+        print('{}. Позиция - {}. Цена - {}. Владелец - {}'.format(self.name, self.position, self.price, self.owner))
+
+    def purchase(self, new_owner):
+        """ Функция покупки клетки """
+        if self.owner is None:
+            self.owner = new_owner
+            print('Клетка куплена игроком {}'.format(new_owner))
+        else:
+            print('Клетка имеет владельца!')
+
+
+class Player:
+    """ Игрок имеет начальную позицию=0, деньги=100 и передается имя"""
+    def __init__(self, name):
+        self.position = 0
+        self.money = 100
+        self.name = name
+
+    def move(self, movement):
+        """ Один ход. Позиция игрока += рандомное число"""
+        self.position += movement
+        print(self.position)
+        print('Вы походили на {}'.format(movement))
+
+        if self.position >= 14:  # таким образом начинаем круг сначала
+            self.position -= 14  # позиции опять начинают считаться с нуль (20->0, 23->3)
+            self.money += 100  # когда прошли круг - начисляются деньги
+
+    def info(self):
+        print('{}. Деньги - {}. Позиция {}.'.format(self.name, self.money, self.position))
 
 
 def player_create(color):
@@ -18,7 +58,7 @@ def first_move(tur, mistake, name):
     """ Отпечатываем черепашку (для наглядности цвета игрока), записываем напротив имя игрока
      и занимаем начальную позицию (0 клетка) """
     tur.up()
-    tur.goto(1, -mistake)
+    tur.goto(-115, 70-mistake)
     tur.stamp()
     tur.forward(20)
     tur.right(90)
@@ -28,31 +68,125 @@ def first_move(tur, mistake, name):
     tur.goto(-214 + mistake, 165 - mistake)
 
 
-def step(tur, n):
+def step(tur, player):
     """ Функция передвижения черепашек. Шаг - 100 единиц. 8 if'ов - 4 условия поворота для 2 черепашек """
-    global my_index
+    global my_index, field, players
+
+    n = random.randint(1, 5)  # ход на n клеток
     my_index = 1 if my_index == 0 else 0  # смена 0 на 1 и наоборот. ничего лучше не придумал
 
     tur.speed(1)
     for e in range(n):
         tur.forward(100)
 
-        if (round(tur.xcor()) == 186 and round(tur.ycor()) == 165)\
-                or (round(tur.xcor()) == 186 and round(tur.ycor()) == -135)\
-                or (round(tur.xcor()) == -214 and round(tur.ycor()) == -135)\
-                or (round(tur.xcor()) == -214 and round(tur.ycor()) == 165)\
+        if (round(tur.xcor()) == 186 and round(tur.ycor()) == 165) \
+                or (round(tur.xcor()) == 186 and round(tur.ycor()) == -135) \
+                or (round(tur.xcor()) == -214 and round(tur.ycor()) == -135) \
+                or (round(tur.xcor()) == -214 and round(tur.ycor()) == 165) \
                 or (round(tur.xcor()) == 211 and round(tur.ycor()) == 140) \
                 or (round(tur.xcor()) == 211 and round(tur.ycor()) == -160) \
                 or (round(tur.xcor()) == -189 and round(tur.ycor()) == -160) \
                 or (round(tur.xcor()) == -189 and round(tur.ycor()) == 140):
             tur.right(90)
 
-        print('x -', tur.xcor())
-        print('y -', tur.ycor())
-        print()
+        # print('x -', tur.xcor())
+        # print('y -', tur.ycor())
+        # print()
+
+    player.move(n)  # функциональный ход
+    player.info()
+    field[player.position].info()
+
+    if field[player.position].position == 0:
+        """Если это 0-клетка"""
+        print('0-клетка')
+
+    else:
+        if field[player.position].owner is None:
+            """ Если клетка еще не куплена """
+            while True:
+                # choose = input('[1] Купить [2] Пас\n')
+                choose = window.textinput('Выбор действия', '[1] Купить [2] Пас')
+                if choose == '1':
+                    if player.money >= field[player.position].price:
+                        tur.turtlesize(3, 3, 10)
+                        tur.stamp()
+                        tur.turtlesize(1, 1, 1)
+                        field[player.position].purchase(player.name)
+                        player.money -= field[player.position].price
+                        break
+                    else:
+                        print('you havent enough money!')
+                elif choose == '2':
+                    break
+                else:
+                    continue
+
+        elif field[player.position].owner == player.name:
+            """ Если клетка уже куплена вами """
+            print('Это ваша клетка')
+            while True:
+                # choose = input('[1] Улучшить [2] Пас\n')
+                choose = window.textinput('Выбор действия', '[1] Улучшить [2] Пас')
+                # Тут будет функционал улучшение клетки. По типу постройки домов в оригинальной монополии
+                # Но улучшать можно только когда вы на своей клетке
+                if choose == '1':
+                    print('Улучшение пока недоступно!')
+                    break
+                elif choose == '2':
+                    break
+                else:
+                    continue
+
+        else:
+            """ Если клетка куплена кем-то другим """
+            rent = int(field[player.position].price * 0.1)  # арендая плата = 10% цены клетки
+            print('Вы заплатили {}'.format(rent))
+            player.money -= rent  # забираем у того, кто наступил на чужую клетку арендную плату
+
+            for p in players:  # ищем владельца клетки по имени (В игре должны быть разные имена!!!)
+                if p.name == field[player.position].owner:  # нашли владельца - отдаем ему бабки
+                    p.money += rent
+    write_hod(teh_turtle, my_index)
+    window.listen()
+
+
+def write_monopoly(t_t):
+    t_t.goto(0, 212)
+    t_t.write('МОНОПОЛИЯ', align="center", font=("Arial", 25, "normal"))
+
+
+def write_hod(t_t, mi):
+    if mi == 0:
+        t_t.goto(-130, 70)
+    else:
+        t_t.goto(-130, 45)
 
 
 if __name__ == '__main__':
+    teh_turtle = turtle.Turtle()
+    teh_turtle.color('dark green')
+    teh_turtle.speed(0)
+    teh_turtle.up()
+    write_monopoly(teh_turtle)
+
+    cell_0 = Cell('0-клетка', 0, None)
+    cell_1 = Cell('1-клетка', 1, 10)
+    cell_2 = Cell('2-клетка', 2, 15)
+    cell_3 = Cell('3-клетка', 3, 20)
+    cell_4 = Cell('4-клетка', 4, 25)
+    cell_5 = Cell('5-клетка', 5, 30)
+    cell_6 = Cell('6-клетка', 6, 35)
+    cell_7 = Cell('7-клетка', 7, 40)
+    cell_8 = Cell('8-клетка', 8, 45)
+    cell_9 = Cell('9-клетка', 9, 50)
+    cell_10 = Cell('10-клетка', 10, 55)
+    cell_11 = Cell('11-клетка', 11, 60)
+    cell_12 = Cell('12-клетка', 12, 65)
+    cell_13 = Cell('13-клетка', 13, 70)
+    cell_14 = Cell('14-клетка', 14, 75)
+    field = [cell_0, cell_1, cell_2, cell_3, cell_4, cell_5, cell_6, cell_7, cell_8, cell_9, cell_10,
+             cell_11, cell_12, cell_13, cell_14]
     # Создаем окно
     window = turtle.Screen()
 
@@ -80,7 +214,8 @@ if __name__ == '__main__':
     first_move(turtle_2, 25, name_2)
 
     my_index = 0  # типа переключатель (см. функцию step)
-    window.onkeypress(lambda: step(turtles[my_index], random.randint(1, 5)), 'g')
+    write_hod(teh_turtle, my_index)
+    window.onkeypress(lambda: step(turtles[my_index], players[my_index]), 'g')
     # window.onkeypress(lambda: step(turtle_1, random.randint(1, 5)), 'g')
     # window.onkeypress(lambda: step(turtle_2, random.randint(1, 5)), 'h')
     window.listen()

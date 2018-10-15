@@ -12,14 +12,14 @@ class Player:
         self.money = 100
         self.name = name
 
-    def move(self):
+    def move(self, movement):
         """ Один ход. Позиция игрока += рандомное число"""
-        movement = random.randint(1, 5)
         self.position += movement
+        print(self.position)
         print('Вы походили на {}'.format(movement))
 
-        if self.position >= 20:  # таким образом начинаем круг сначала
-            self.position -= 20  # позиции опять начинают считаться с нуль (20->0, 23->3)
+        if self.position >= 14:  # таким образом начинаем круг сначала
+            self.position -= 14  # позиции опять начинают считаться с нуль (20->0, 23->3)
             self.money += 100  # когда прошли круг - начисляются деньги
 
     def info(self):
@@ -66,15 +66,10 @@ cell_11 = Cell('11-клетка', 11, 60)
 cell_12 = Cell('12-клетка', 12, 65)
 cell_13 = Cell('13-клетка', 13, 70)
 cell_14 = Cell('14-клетка', 14, 75)
-cell_15 = Cell('15-клетка', 15, 80)
-cell_16 = Cell('16-клетка', 16, 85)
-cell_17 = Cell('17-клетка', 17, 90)
-cell_18 = Cell('18-клетка', 18, 95)
-cell_19 = Cell('19-клетка', 19, 100)
 
 
 field = [cell_0, cell_1, cell_2, cell_3, cell_4, cell_5, cell_6, cell_7, cell_8, cell_9, cell_10,
-         cell_11, cell_12, cell_13, cell_14, cell_15, cell_16, cell_17, cell_18, cell_19]
+         cell_11, cell_12, cell_13, cell_14]
 
 
 if __name__ == '__main__':
