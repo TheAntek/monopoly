@@ -65,6 +65,7 @@ def first_move(tur, mistake, name):
     tur.forward(12)
     tur.left(90)
     tur.write(name, font=("Arial", 15, "normal"))
+    # tur.goto(-200, 150)
     tur.goto(-214 + mistake, 165 - mistake)
 
 
@@ -72,21 +73,23 @@ def step(tur, player):
     """ Функция передвижения черепашек. Шаг - 100 единиц. 8 if'ов - 4 условия поворота для 2 черепашек """
     global my_index, field, players
 
+    # выравниваем наших черепашек (чтобы они ходили по одной линии)
+    if tur.position() == (-214, 165) or tur.position() == (-189, 140):
+        tur.goto(-200, 150)
+
     n = random.randint(1, 5)  # ход на n клеток
-    my_index = 1 if my_index == 0 else 0  # смена 0 на 1 и наоборот. ничего лучше не придумал
+    my_index ^= 1  # иди нахер. меняю 0 на 1 и наоборот.
+    # my_index = my_index ^ 1  # смена 0 на 1 и наоборот
+    # my_index = 1 if my_index == 0 else 0  # смена 0 на 1 и наоборот. ничего лучше не придумал
 
     tur.speed(1)
     for e in range(n):
         tur.forward(100)
 
-        if (round(tur.xcor()) == 186 and round(tur.ycor()) == 165) \
-                or (round(tur.xcor()) == 186 and round(tur.ycor()) == -135) \
-                or (round(tur.xcor()) == -214 and round(tur.ycor()) == -135) \
-                or (round(tur.xcor()) == -214 and round(tur.ycor()) == 165) \
-                or (round(tur.xcor()) == 211 and round(tur.ycor()) == 140) \
-                or (round(tur.xcor()) == 211 and round(tur.ycor()) == -160) \
-                or (round(tur.xcor()) == -189 and round(tur.ycor()) == -160) \
-                or (round(tur.xcor()) == -189 and round(tur.ycor()) == 140):
+        if (round(tur.xcor()) == 200 and round(tur.ycor()) == 150) \
+                or (round(tur.xcor()) == 200 and round(tur.ycor()) == -150) \
+                or (round(tur.xcor()) == -200 and round(tur.ycor()) == -150) \
+                or (round(tur.xcor()) == -200 and round(tur.ycor()) == 150):
             tur.right(90)
 
         # print('x -', tur.xcor())
@@ -109,11 +112,21 @@ def step(tur, player):
                 choose = window.textinput('Выбор действия', '[1] Купить [2] Пас')
                 if choose == '1':
                     if player.money >= field[player.position].price:
-                        tur.turtlesize(3, 3, 10)
+                        # дальше - махинации с отпечатком черепашки на клетка для наглядности покупки
+                        some_stamp_colors = ['DodgerBlue', 'Crimson', 'Red', 'Blue']
+                        tur.turtlesize(2, 2, 10)
+                        print(my_index)
+                        tur.color(some_stamp_colors[my_index])
                         tur.stamp()
+                        tur.color(some_stamp_colors[3-my_index])
                         tur.turtlesize(1, 1, 1)
-                        field[player.position].purchase(player.name)
-                        player.money -= field[player.position].price
+
+                        field[player.position].purchase(player.name)  # клетка теперь пренадлежит <ИМЯ ИГРОКА>
+                        player.money -= field[player.position].price  # Забираем у игрока бабки=цена клетки
+
+                        money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
+                        money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+
                         break
                     else:
                         print('you havent enough money!')
@@ -147,16 +160,26 @@ def step(tur, player):
             for p in players:  # ищем владельца клетки по имени (В игре должны быть разные имена!!!)
                 if p.name == field[player.position].owner:  # нашли владельца - отдаем ему бабки
                     p.money += rent
-    write_hod(teh_turtle, my_index)
+
+                    money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
+                    money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+
+                    # my_index ^ 1 - побитовое исключающее или (Меняем 0 на 1 и наоборот)
+                    money_turtles[my_index ^ 1].clear()  # чистим поле, там где деньги и записываем обновленные деньги
+                    money_turtles[my_index ^ 1].write('$ {}'.format(p.money), font=("Arial", 15, "normal"))
+
+    write_hod(teh_turtle, my_index)  # наглядность чей ход (зелененькая стрелочка возле черепашки)
     window.listen()
 
 
 def write_monopoly(t_t):
+    # написать сверху "монополия"
     t_t.goto(0, 212)
     t_t.write('МОНОПОЛИЯ', align="center", font=("Arial", 25, "normal"))
 
 
 def write_hod(t_t, mi):
+    # указатель на черепашку, чей сейчас ход
     if mi == 0:
         t_t.goto(-130, 70)
     else:
@@ -165,10 +188,24 @@ def write_hod(t_t, mi):
 
 if __name__ == '__main__':
     teh_turtle = turtle.Turtle()
-    teh_turtle.color('dark green')
     teh_turtle.speed(0)
     teh_turtle.up()
+    teh_turtle.hideturtle()
     write_monopoly(teh_turtle)
+
+    money_turtle_1 = teh_turtle.clone()
+    money_turtle_2 = money_turtle_1.clone()  # делаем копию черепашки
+
+    # каждой черепашке, ответсвенной за деньги даем свой цвет, координаты. Записываем начальный капитал.
+    teh_turtle.color('dark green')
+    money_turtle_1.color('Red')
+    money_turtle_2.color('Blue')
+    money_turtle_1.goto(50, 58)
+    money_turtle_2.goto(50, 33)
+    money_turtle_1.write('$ 100', font=("Arial", 15, "normal"))
+    money_turtle_2.write('$ 100', font=("Arial", 15, "normal"))
+
+    money_turtles = [money_turtle_2, money_turtle_1]  # созд. список, чтобы с помощью my_index вызывать нужную черепашку
 
     cell_0 = Cell('0-клетка', 0, None)
     cell_1 = Cell('1-клетка', 1, 10)
@@ -215,6 +252,7 @@ if __name__ == '__main__':
 
     my_index = 0  # типа переключатель (см. функцию step)
     write_hod(teh_turtle, my_index)
+    teh_turtle.showturtle()  # теперь видно кто ходит первый
     window.onkeypress(lambda: step(turtles[my_index], players[my_index]), 'g')
     # window.onkeypress(lambda: step(turtle_1, random.randint(1, 5)), 'g')
     # window.onkeypress(lambda: step(turtle_2, random.randint(1, 5)), 'h')
