@@ -78,12 +78,13 @@ def step(tur, player):
         tur.goto(-200, 150)
 
     n = random.randint(1, 5)  # ход на n клеток
-    my_index ^= 1  # иди нахер. меняю 0 на 1 и наоборот.
-    # my_index = my_index ^ 1  # смена 0 на 1 и наоборот
+    my_index ^= 1  # иди нахрен. меняю 0 на 1 и наоборот.
+    # my_index = my_index ^ 1  # смена 0 на 1 и наоборот. придумал.
     # my_index = 1 if my_index == 0 else 0  # смена 0 на 1 и наоборот. ничего лучше не придумал
 
     tur.speed(1)
     for e in range(n):
+        # графическое отображение ходов
         tur.forward(100)
 
         if (round(tur.xcor()) == 200 and round(tur.ycor()) == 150) \
@@ -92,32 +93,39 @@ def step(tur, player):
                 or (round(tur.xcor()) == -200 and round(tur.ycor()) == 150):
             tur.right(90)
 
-        # print('x -', tur.xcor())
-        # print('y -', tur.ycor())
-        # print()
-
     player.move(n)  # функциональный ход
     player.info()
     field[player.position].info()
+    money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
+    money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+
+    # графическое отображение инфы о клетке (Зачем?)
+
+    # cell_info_turtle.clear()
+    # cell_info_turtle.write('{}\nЦена: $ {}'.format(field[player.position].name, field[player.position].price),
+    #                        font=("Arial", 13, "normal"))
 
     if field[player.position].position == 0:
         """Если это 0-клетка"""
-        print('0-клетка')
+        info_turtle.clear()
+        info_turtle.write('Нет доступных действий на клетке "Старт"!', align='center', font=("Arial", 9, "normal"))
+        money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
+        money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
 
     else:
         if field[player.position].owner is None:
             """ Если клетка еще не куплена """
             while True:
-                # choose = input('[1] Купить [2] Пас\n')
                 choose = window.textinput('Выбор действия', '[1] Купить [2] Пас')
                 if choose == '1':
                     if player.money >= field[player.position].price:
                         # дальше - махинации с отпечатком черепашки на клетка для наглядности покупки
-                        some_stamp_colors = ['DodgerBlue', 'Crimson', 'Red', 'Blue']
+                        some_stamp_colors = ['CornflowerBlue', 'LightCoral', 'Red', 'Blue']
                         tur.turtlesize(2, 2, 10)
-                        print(my_index)
+                        tur.shape('square')
                         tur.color(some_stamp_colors[my_index])
                         tur.stamp()
+                        tur.shape('turtle')
                         tur.color(some_stamp_colors[3-my_index])
                         tur.turtlesize(1, 1, 1)
 
@@ -127,55 +135,70 @@ def step(tur, player):
                         money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
                         money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
 
+                        info_turtle.clear()
+                        info_turtle.write('{} купил {}!'.format(player.name, field[player.position].name),
+                                          align='center', font=("Arial", 9, "normal"))
                         break
                     else:
-                        print('you havent enough money!')
+                        info_turtle.clear()
+                        info_turtle.write('Недостаточно денег для покупки!', align='center',
+                                          font=("Arial", 9, "normal"))
+                        break
+
                 elif choose == '2':
+                    info_turtle.clear()
+                    info_turtle.write('{} воздержался от покупки!'.format(player.name), align='center',
+                                      font=("Arial", 9, "normal"))
                     break
                 else:
                     continue
 
         elif field[player.position].owner == player.name:
             """ Если клетка уже куплена вами """
-            print('Это ваша клетка')
+            info_turtle.clear()
+            info_turtle.write('Вы попали на свою клетку!', align='center', font=("Arial", 9, "normal"))
             while True:
-                # choose = input('[1] Улучшить [2] Пас\n')
                 choose = window.textinput('Выбор действия', '[1] Улучшить [2] Пас')
                 # Тут будет функционал улучшение клетки. По типу постройки домов в оригинальной монополии
                 # Но улучшать можно только когда вы на своей клетке
                 if choose == '1':
-                    print('Улучшение пока недоступно!')
+                    info_turtle.clear()
+                    info_turtle.write('Улучшения пока недоступны!', align='center', font=("Arial", 9, "normal"))
                     break
                 elif choose == '2':
+                    info_turtle.clear()
+                    info_turtle.write('{} воздержался от улучшения!'.format(player.name), align='center',
+                                      font=("Arial", 9, "normal"))
                     break
                 else:
                     continue
 
         else:
             """ Если клетка куплена кем-то другим """
+
             rent = int(field[player.position].price * 0.1)  # арендая плата = 10% цены клетки
-            print('Вы заплатили {}'.format(rent))
-            player.money -= rent  # забираем у того, кто наступил на чужую клетку арендную плату
 
-            for p in players:  # ищем владельца клетки по имени (В игре должны быть разные имена!!!)
-                if p.name == field[player.position].owner:  # нашли владельца - отдаем ему бабки
-                    p.money += rent
+            if player.money < rent:
+                print('{} проиграл'.format(player.name))
 
-                    money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
-                    money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+            else:
+                player.money -= rent  # забираем у того, кто наступил на чужую клетку, бабки
 
-                    # my_index ^ 1 - побитовое исключающее или (Меняем 0 на 1 и наоборот)
-                    money_turtles[my_index ^ 1].clear()  # чистим поле, там где деньги и записываем обновленные деньги
-                    money_turtles[my_index ^ 1].write('$ {}'.format(p.money), font=("Arial", 15, "normal"))
+                other_player = players[my_index]
+                other_player.money += rent
+
+                info_turtle.clear()
+                info_turtle.write('{} заплатил {} {}$ за аренду'.format(player.name, other_player.name, rent),
+                                  align='center', font=("Arial", 9, "normal"))
+
+                money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
+                money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+
+                money_turtles[my_index ^ 1].clear()  # так же и для другого игрока
+                money_turtles[my_index ^ 1].write('$ {}'.format(other_player.money), font=("Arial", 15, "normal"))
 
     write_hod(teh_turtle, my_index)  # наглядность чей ход (зелененькая стрелочка возле черепашки)
     window.listen()
-
-
-def write_monopoly(t_t):
-    # написать сверху "монополия"
-    t_t.goto(0, 212)
-    t_t.write('МОНОПОЛИЯ', align="center", font=("Arial", 25, "normal"))
 
 
 def write_hod(t_t, mi):
@@ -186,24 +209,32 @@ def write_hod(t_t, mi):
         t_t.goto(-130, 45)
 
 
-if __name__ == '__main__':
-    teh_turtle = turtle.Turtle()
-    teh_turtle.speed(0)
-    teh_turtle.up()
-    teh_turtle.hideturtle()
-    write_monopoly(teh_turtle)
+def create_turtle():
+    """ функция создания черепашек с нужными настройками. не использую turtle.clone(), ибо при t.clear() идет очистка
+        всего (объекты ссылаются друг на друга?) """
+    new_turtle = turtle.Turtle()
+    new_turtle.speed(0)
+    new_turtle.up()
+    new_turtle.hideturtle()
+    return new_turtle
 
-    money_turtle_1 = teh_turtle.clone()
-    money_turtle_2 = money_turtle_1.clone()  # делаем копию черепашки
+
+if __name__ == '__main__':
+
+    teh_turtle = create_turtle()
+    money_turtle_1 = create_turtle()
+    money_turtle_2 = create_turtle()
+    info_turtle = create_turtle()
+    cell_info_turtle = create_turtle()
+
+    info_turtle.goto(-0, -93)
+    cell_info_turtle.goto(20, -70)
+    info_turtle.write('Добро пожаловать!', align='center', font=("Arial", 9, "normal"))
 
     # каждой черепашке, ответсвенной за деньги даем свой цвет, координаты. Записываем начальный капитал.
     teh_turtle.color('dark green')
     money_turtle_1.color('Red')
     money_turtle_2.color('Blue')
-    money_turtle_1.goto(50, 58)
-    money_turtle_2.goto(50, 33)
-    money_turtle_1.write('$ 100', font=("Arial", 15, "normal"))
-    money_turtle_2.write('$ 100', font=("Arial", 15, "normal"))
 
     money_turtles = [money_turtle_2, money_turtle_1]  # созд. список, чтобы с помощью my_index вызывать нужную черепашку
 
@@ -226,13 +257,15 @@ if __name__ == '__main__':
              cell_11, cell_12, cell_13, cell_14]
     # Создаем окно
     window = turtle.Screen()
+    window.colormode(255)
+    window.bgcolor(245, 255, 245)
 
     why()  # ваау. рисуем каждый раз новую карту при запуске программы ( не смог в скрин (пиксели неточные) )
     # window.bgpic('Screenshot_2.png') - так должно быть в идеале. используем бекграунд пикчу как карту
 
     # В окне запрашиваем имена игроков
-    name_1 = window.textinput('Monopoly', 'Name of first player')
-    name_2 = window.textinput('Monopoly', 'Name of second player')
+    name_1 = window.textinput('Монополия', 'Введите имя первого игрока:')
+    name_2 = window.textinput('Монополия', 'Введите имя второго игрока:')
 
     # Функционал - создаем объекты игроков. Закидываем их в список, по которому будем итерировать для очередности ходов
     player_1 = Player(name_1)
@@ -249,6 +282,12 @@ if __name__ == '__main__':
     # Делаем дефолтный первый мув
     first_move(turtle_1, 0, name_1)
     first_move(turtle_2, 25, name_2)
+
+    # пишем начальный кэш каждого игрока
+    money_turtle_1.goto(50, 58)
+    money_turtle_2.goto(50, 33)
+    money_turtle_1.write('$ 100', font=("Arial", 15, "normal"))
+    money_turtle_2.write('$ 100', font=("Arial", 15, "normal"))
 
     my_index = 0  # типа переключатель (см. функцию step)
     write_hod(teh_turtle, my_index)
