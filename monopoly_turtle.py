@@ -5,11 +5,13 @@ import random
 
 class Cell:
     """ Клас клетки. Имеет название, позицию на поле, цену покупки и владельца"""
-    def __init__(self, title, position, price):
+    def __init__(self, title, position, price, rent):
         self.owner = None
         self.name = title
         self.position = position
         self.price = price
+        self.rent = rent
+        self.upgrade_level = 0
 
     def info(self):
         print('{}. Позиция - {}. Цена - {}. Владелец - {}'.format(self.name, self.position, self.price, self.owner))
@@ -106,11 +108,21 @@ def step(tur, player):
     #                        font=("Arial", 13, "normal"))
 
     if field[player.position].position == 0:
-        """Если это 0-клетка"""
+        # Если позиция - "Старт"
         info_turtle.clear()
         info_turtle.write('Нет доступных действий на клетке "Старт"!', align='center', font=("Arial", 9, "normal"))
         money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
         money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+
+    elif field[player.position].position == 4:
+        # Если позиция - "Казино"
+        print()
+    elif field[player.position].position == 7:
+        # Если позиция - "Тюрьма"
+        print()
+    elif field[player.position].position == 11:
+        # Если позиция - "Налоговая"
+        print()
 
     else:
         if field[player.position].owner is None:
@@ -158,12 +170,48 @@ def step(tur, player):
             info_turtle.clear()
             info_turtle.write('Вы попали на свою клетку!', align='center', font=("Arial", 9, "normal"))
             while True:
-                choose = window.textinput('Выбор действия', '[1] Улучшить [2] Пас')
+                upgrade_price = field[player.position].rent * 2
+                print(upgrade_price)
+                choose = window.textinput('Выбор действия', '[1] Улучшить ({}) [2] Пас'.format(upgrade_price))
                 # Тут будет функционал улучшение клетки. По типу постройки домов в оригинальной монополии
                 # Но улучшать можно только когда вы на своей клетке
+
                 if choose == '1':
-                    info_turtle.clear()
-                    info_turtle.write('Улучшения пока недоступны!', align='center', font=("Arial", 9, "normal"))
+                    if player.money < upgrade_price:
+                        info_turtle.clear()
+                        info_turtle.write('Не хватает денег на улучшение!', align='center', font=("Arial", 9, "normal"))
+                    else:
+                        # else - если хватает денег на улучшение
+                        if field[player.position].upgrade_level == 4:
+                            info_turtle.write('{} имеет максимальный уровень улучшения!'.
+                                              format(player.name, field[player.position].name),
+                                              align='center', font=("Arial", 9, "normal"))
+
+                        else:
+                            upgrade_cell(tur, field[player.position].upgrade_level)  # рисуем улучшение
+
+                            if field[player.position].upgrade_level == 0:
+                                field[player.position].rent = int(field[player.position].rent*2)
+
+                            elif field[player.position].upgrade_level == 1:
+                                field[player.position].rent = int(field[player.position].rent*3/2)
+
+                            elif field[player.position].upgrade_level == 2:
+                                field[player.position].rent = int(field[player.position].rent*4/3)
+
+                            elif field[player.position].upgrade_level == 3:
+                                field[player.position].rent = int(field[player.position].rent*5/4)
+
+                            field[player.position].upgrade_level += 1
+                            player.money -= upgrade_price
+
+                            info_turtle.clear()
+                            info_turtle.write('{} улучшил {} за {}!'.format(player.name, field[player.position].name,
+                                              upgrade_price), align='center', font=("Arial", 9, "normal"))
+
+                            money_turtles[my_index].clear()
+                            money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+
                     break
                 elif choose == '2':
                     info_turtle.clear()
@@ -176,7 +224,7 @@ def step(tur, player):
         else:
             """ Если клетка куплена кем-то другим """
 
-            rent = int(field[player.position].price * 0.1)  # арендая плата = 10% цены клетки
+            rent = field[player.position].rent
 
             if player.money < rent:
                 print('{} проиграл'.format(player.name))
@@ -188,7 +236,7 @@ def step(tur, player):
                 other_player.money += rent
 
                 info_turtle.clear()
-                info_turtle.write('{} заплатил {} {}$ за аренду'.format(player.name, other_player.name, rent),
+                info_turtle.write('{} заплатил {} {}$ за аренду!'.format(player.name, other_player.name, rent),
                                   align='center', font=("Arial", 9, "normal"))
 
                 money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
@@ -207,6 +255,47 @@ def write_hod(t_t, mi):
         t_t.goto(-130, 70)
     else:
         t_t.goto(-130, 45)
+
+
+def upgrade_cell(t, lvl):
+    """ Улучшение клетки """
+    upgrade_stamp_colors = ['#66D5B3', '#F8DE8D', 'Red', 'Blue']
+    print(lvl)
+    if lvl == 0:
+        t.goto(t.xcor() - 10, t.ycor() + 10)
+        t.shape('square')
+        t.color(upgrade_stamp_colors[my_index])
+        t.stamp()
+        t.color(upgrade_stamp_colors[3 - my_index])
+        t.shape('turtle')
+        t.goto(t.xcor() + 10, t.ycor() - 10)
+
+    elif lvl == 1:
+        t.goto(t.xcor() + 10, t.ycor() + 10)
+        t.shape('square')
+        t.color(upgrade_stamp_colors[my_index])
+        t.stamp()
+        t.color(upgrade_stamp_colors[3 - my_index])
+        t.shape('turtle')
+        t.goto(t.xcor() - 10, t.ycor() - 10)
+
+    elif lvl == 2:
+        t.goto(t.xcor() + 10, t.ycor() - 10)
+        t.shape('square')
+        t.color(upgrade_stamp_colors[my_index])
+        t.stamp()
+        t.color(upgrade_stamp_colors[3 - my_index])
+        t.shape('turtle')
+        t.goto(t.xcor() - 10, t.ycor() + 10)
+
+    elif lvl == 3:
+        t.goto(t.xcor() - 10, t.ycor() - 10)
+        t.shape('square')
+        t.color(upgrade_stamp_colors[my_index])
+        t.stamp()
+        t.color(upgrade_stamp_colors[3 - my_index])
+        t.shape('turtle')
+        t.goto(t.xcor() + 10, t.ycor() + 10)
 
 
 def create_turtle():
@@ -238,23 +327,23 @@ if __name__ == '__main__':
 
     money_turtles = [money_turtle_2, money_turtle_1]  # созд. список, чтобы с помощью my_index вызывать нужную черепашку
 
-    cell_0 = Cell('0-клетка', 0, None)
-    cell_1 = Cell('1-клетка', 1, 10)
-    cell_2 = Cell('2-клетка', 2, 15)
-    cell_3 = Cell('3-клетка', 3, 20)
-    cell_4 = Cell('4-клетка', 4, 25)
-    cell_5 = Cell('5-клетка', 5, 30)
-    cell_6 = Cell('6-клетка', 6, 35)
-    cell_7 = Cell('7-клетка', 7, 40)
-    cell_8 = Cell('8-клетка', 8, 45)
-    cell_9 = Cell('9-клетка', 9, 50)
-    cell_10 = Cell('10-клетка', 10, 55)
-    cell_11 = Cell('11-клетка', 11, 60)
-    cell_12 = Cell('12-клетка', 12, 65)
-    cell_13 = Cell('13-клетка', 13, 70)
-    cell_14 = Cell('14-клетка', 14, 75)
+    cell_0 = Cell('Старт', 0, None, None)
+    cell_1 = Cell('1-клетка', 1, 10, 1)
+    cell_2 = Cell('2-клетка', 2, 20, 2)
+    cell_3 = Cell('3-клетка', 3, 30, 3)
+    cell_4 = Cell('4-клетка', 4, None, None)
+    cell_5 = Cell('5-клетка', 5, 40, 4)
+    cell_6 = Cell('6-клетка', 6, 50, 5)
+    cell_7 = Cell('7-клетка', 7, None, None)
+    cell_8 = Cell('8-клетка', 8, 60, 6)
+    cell_9 = Cell('9-клетка', 9, 70, 7)
+    cell_10 = Cell('10-клетка', 10, 80, 8)
+    cell_11 = Cell('11-клетка', 11, None, None)
+    cell_12 = Cell('12-клетка', 12, 90, 9)
+    cell_13 = Cell('13-клетка', 13, 100, 10)
     field = [cell_0, cell_1, cell_2, cell_3, cell_4, cell_5, cell_6, cell_7, cell_8, cell_9, cell_10,
-             cell_11, cell_12, cell_13, cell_14]
+             cell_11, cell_12, cell_13]
+
     # Создаем окно
     window = turtle.Screen()
     window.colormode(255)
@@ -292,7 +381,7 @@ if __name__ == '__main__':
     my_index = 0  # типа переключатель (см. функцию step)
     write_hod(teh_turtle, my_index)
     teh_turtle.showturtle()  # теперь видно кто ходит первый
-    window.onkeypress(lambda: step(turtles[my_index], players[my_index]), 'g')
+    window.onkeypress(lambda: step(turtles[my_index], players[my_index]), 'space')
     # window.onkeypress(lambda: step(turtle_1, random.randint(1, 5)), 'g')
     # window.onkeypress(lambda: step(turtle_2, random.randint(1, 5)), 'h')
     window.listen()

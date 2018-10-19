@@ -63,7 +63,7 @@ def why():
 
     my.up()
     my.goto(-200, 180)
-    my.write('Начало', align='center', font=("Arial", 13, "normal"))
+    my.write('Старт', align='center', font=("Arial", 13, "normal"))
     my.goto(-100, 180)
     my.write('1', align='center', font=("Arial", 13, "normal"))
     my.goto(0, 180)
@@ -71,13 +71,13 @@ def why():
     my.goto(100, 180)
     my.write('3', align='center', font=("Arial", 13, "normal"))
     my.goto(200, 180)
-    my.write('4', align='center', font=("Arial", 13, "normal"))
+    my.write('Казино', align='center', font=("Arial", 13, "normal"))
     my.goto(200, 80)
     my.write('5', align='center', font=("Arial", 13, "normal"))
     my.goto(200, -20)
     my.write('6', align='center', font=("Arial", 13, "normal"))
     my.goto(200, -120)
-    my.write('7', align='center', font=("Arial", 13, "normal"))
+    my.write('Тюрьма', align='center', font=("Arial", 13, "normal"))
     my.goto(100, -120)
     my.write('8', align='center', font=("Arial", 13, "normal"))
     my.goto(0, -120)
@@ -85,54 +85,53 @@ def why():
     my.goto(-100, -120)
     my.write('10', align='center', font=("Arial", 13, "normal"))
     my.goto(-200, -120)
-    my.write('11', align='center', font=("Arial", 13, "normal"))
+    my.write('Налоговая', align='center', font=("Arial", 13, "normal"))
     my.goto(-200, -20)
     my.write('12', align='center', font=("Arial", 13, "normal"))
     my.goto(-200, 80)
     my.write('13', align='center', font=("Arial", 13, "normal"))
 
-
     my.goto(-199, 102)
-    my.write('+100$ каждый круг', align='center', font=("Arial", 8, "normal"))
+    my.write('+100$ за круг!', align='center', font=("Arial", 9, "normal"))
 
     my.goto(-100, 102)
     my.write('10$', align='center', font=("Arial", 10, "normal"))
 
     my.goto(0, 102)
-    my.write('15$', align='center', font=("Arial", 10, "normal"))
-
-    my.goto(100, 102)
     my.write('20$', align='center', font=("Arial", 10, "normal"))
 
-    my.goto(200, 102)
-    my.write('25$', align='center', font=("Arial", 10, "normal"))
-
-    my.goto(200, 2)
+    my.goto(100, 102)
     my.write('30$', align='center', font=("Arial", 10, "normal"))
 
-    my.goto(200, -98)
-    my.write('35$', align='center', font=("Arial", 10, "normal"))
+    my.goto(200, 102)
+    my.write('Испытай удачу!', align='center', font=("Arial", 9, "normal"))
 
-    my.goto(200, -198)
+    my.goto(200, 2)
     my.write('40$', align='center', font=("Arial", 10, "normal"))
 
-    my.goto(100, -198)
-    my.write('45$', align='center', font=("Arial", 10, "normal"))
-
-    my.goto(0, -198)
+    my.goto(200, -98)
     my.write('50$', align='center', font=("Arial", 10, "normal"))
 
-    my.goto(-100, -198)
-    my.write('55$', align='center', font=("Arial", 10, "normal"))
+    my.goto(200, -198)
+    my.write('Пропуск хода!', align='center', font=("Arial", 9, "normal"))
 
-    my.goto(-200, -198)
+    my.goto(100, -198)
     my.write('60$', align='center', font=("Arial", 10, "normal"))
 
+    my.goto(0, -198)
+    my.write('70$', align='center', font=("Arial", 10, "normal"))
+
+    my.goto(-100, -198)
+    my.write('80$', align='center', font=("Arial", 10, "normal"))
+
+    my.goto(-200, -198)
+    my.write('Оплатите счет!', align='center', font=("Arial", 9, "normal"))
+
     my.goto(-200, -98)
-    my.write('65$', align='center', font=("Arial", 10, "normal"))
+    my.write('90$', align='center', font=("Arial", 10, "normal"))
 
     my.goto(-200, 2)
-    my.write('70$', align='center', font=("Arial", 10, "normal"))
+    my.write('100$', align='center', font=("Arial", 10, "normal"))
 
     my.goto(0, 212)
     my.color('Red')
