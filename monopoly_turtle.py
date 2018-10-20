@@ -1,5 +1,6 @@
 import turtle
 from monopoly.mapa import *
+from time import sleep
 import random
 
 
@@ -116,7 +117,85 @@ def step(tur, player):
 
     elif field[player.position].position == 4:
         # Если позиция - "Казино"
-        print()
+        while True:
+            choose_kaz = window.textinput('Добро пожаловать в Казино!', '[1] Играть [2] Пас')
+            if choose_kaz == '1':
+                info_turtle.clear()
+                info_turtle.write('{} зашел в Казино!'.format(player.name), align='center', font=("Arial", 9, "normal"))
+
+                while True:
+                    player_bet = window.textinput('Делайте Ваши ставки!', 'Введите сумму:')
+                    try:
+                        player_bet = int(player_bet)
+                    except ValueError:
+                        info_turtle.clear()
+                        info_turtle.write('Введите корректную сумму!', align='center', font=("Arial", 9, "normal"))
+                        continue
+
+                    if player_bet > player.money:
+                        # если ставка больше чем у вас денег
+                        info_turtle.clear()
+                        info_turtle.write('У Вас недостаточно денег!', align='center', font=("Arial", 9, "normal"))
+                        continue
+
+                    elif player_bet <= player.money:
+                        # если ставка коректна
+                        player.money -= player_bet
+
+                        money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
+                        money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+
+                        info_turtle.clear()
+                        info_turtle.write('Идет игра!', align='center', font=("Arial", 9, "normal"))
+
+                        winning = casino(player_bet)  # бабки + или -
+                        player.money += winning
+
+                        casino_turtle.up()
+                        casino_turtle.goto(1, -51)
+                        casino_turtle.color('#336F24')
+                        casino_turtle.write('$', align='center', font=("Arial", 20, "bold"))
+                        casino_turtle.goto(0, -60)
+                        casino_turtle.down()
+                        casino_turtle.color('gold')
+                        casino_turtle.circle(25)
+                        casino_turtle.color('#1D620C')
+                        casino_turtle.circle(25)
+                        # sleep(1)
+
+                        if winning < player_bet:
+                            info_turtle.clear()
+                            info_turtle.write('{} проиграл {}$ в Казино!'.format(player.name, player_bet-winning),
+                                              align='center', font=("Arial", 9, "normal"))
+
+                        elif winning == player_bet:
+                            info_turtle.clear()
+                            info_turtle.write('{} сыграл в ничью с Казино!'.format(player.name),
+                                              align='center', font=("Arial", 9, "normal"))
+
+                        elif winning > player_bet:
+                            info_turtle.clear()
+                            info_turtle.write('{} выиграл {}$ в Казино!'.format(player.name, winning-player_bet),
+                                              align='center', font=("Arial", 9, "normal"))
+
+                        casino_turtle.clear()
+                        money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
+                        money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+
+                        break
+
+                break
+
+            elif choose_kaz == '2':
+                info_turtle.clear()
+                info_turtle.write('{} отказался играть в Казино!'.format(player.name), align='center',
+                                  font=("Arial", 9, "normal"))
+                break
+            else:
+                info_turtle.clear()
+                info_turtle.write('Введите коректные данные!', align='center', font=("Arial", 9, "normal"))
+                continue
+
     elif field[player.position].position == 7:
         # Если позиция - "Тюрьма"
         print()
@@ -163,6 +242,8 @@ def step(tur, player):
                                       font=("Arial", 9, "normal"))
                     break
                 else:
+                    info_turtle.clear()
+                    info_turtle.write('Введите коректные данные!', align='center', font=("Arial", 9, "normal"))
                     continue
 
         elif field[player.position].owner == player.name:
@@ -172,7 +253,7 @@ def step(tur, player):
             while True:
                 upgrade_price = field[player.position].rent * 2
                 print(upgrade_price)
-                choose = window.textinput('Выбор действия', '[1] Улучшить ({}) [2] Пас'.format(upgrade_price))
+                choose = window.textinput('Выбор действия', '[1] Улучшить ({}$) [2] Пас'.format(upgrade_price))
                 # Тут будет функционал улучшение клетки. По типу постройки домов в оригинальной монополии
                 # Но улучшать можно только когда вы на своей клетке
 
@@ -183,6 +264,7 @@ def step(tur, player):
                     else:
                         # else - если хватает денег на улучшение
                         if field[player.position].upgrade_level == 4:
+                            info_turtle.clear()
                             info_turtle.write('{} имеет максимальный уровень улучшения!'.
                                               format(player.name, field[player.position].name),
                                               align='center', font=("Arial", 9, "normal"))
@@ -219,6 +301,8 @@ def step(tur, player):
                                       font=("Arial", 9, "normal"))
                     break
                 else:
+                    info_turtle.clear()
+                    info_turtle.write('Введите коректные данные!', align='center', font=("Arial", 9, "normal"))
                     continue
 
         else:
@@ -302,10 +386,30 @@ def create_turtle():
     """ функция создания черепашек с нужными настройками. не использую turtle.clone(), ибо при t.clear() идет очистка
         всего (объекты ссылаются друг на друга?) """
     new_turtle = turtle.Turtle()
+    new_turtle.hideturtle()
     new_turtle.speed(0)
     new_turtle.up()
-    new_turtle.hideturtle()
     return new_turtle
+
+
+def casino(money):
+    """ рандомно определяем выиграш """
+    new_list = [0, int(money/2), money, int(money*1.5), int(money*2)]
+    winning = random.choice(new_list)
+    return winning
+
+
+def casino_t_create():
+    new_t = turtle.Turtle()
+    new_t.hideturtle()
+    new_t.up()
+    new_t.speed(1)
+    new_t.shape('circle')
+    new_t.color('gold')
+    new_t.width(10)
+    new_t.goto(0, -60)
+    new_t.down()
+    return new_t
 
 
 if __name__ == '__main__':
@@ -315,10 +419,11 @@ if __name__ == '__main__':
     money_turtle_2 = create_turtle()
     info_turtle = create_turtle()
     cell_info_turtle = create_turtle()
+    casino_turtle = casino_t_create()
 
     info_turtle.goto(-0, -93)
     cell_info_turtle.goto(20, -70)
-    info_turtle.write('Добро пожаловать!', align='center', font=("Arial", 9, "normal"))
+    info_turtle.write('Добро пожаловать! Нажмите <Space>, чтобы походить!', align='center', font=("Arial", 8, "normal"))
 
     # каждой черепашке, ответсвенной за деньги даем свой цвет, координаты. Записываем начальный капитал.
     teh_turtle.color('dark green')
@@ -346,6 +451,7 @@ if __name__ == '__main__':
 
     # Создаем окно
     window = turtle.Screen()
+    window.title('Монополия')
     window.colormode(255)
     window.bgcolor(245, 255, 245)
 
