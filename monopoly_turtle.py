@@ -32,6 +32,8 @@ class Player:
         self.position = 0
         self.money = 100
         self.name = name
+        self.prison = False
+        self.release = False
 
     def move(self, movement):
         """ Один ход. Позиция игрока += рандомное число"""
@@ -81,13 +83,19 @@ def step(tur, player):
         tur.goto(-200, 150)
 
     n = random.randint(1, 5)  # ход на n клеток
-    my_index ^= 1  # иди нахрен. меняю 0 на 1 и наоборот.
-    # my_index = my_index ^ 1  # смена 0 на 1 и наоборот. придумал.
-    # my_index = 1 if my_index == 0 else 0  # смена 0 на 1 и наоборот. ничего лучше не придумал
 
-    tur.speed(1)
+    if player.prison:
+        n = 0
+        player.prison = False
+    # если игрок был в тюрьме - на этот ход он выходит и меняет цвет из серого на свой
+    if player.release:
+        tur.color(['red', 'blue'][my_index])
+        player.release = False
+
+    my_index ^= 1  # меняю 0 на 1 и наоборот.
+
+    # графическое отображение ходов
     for e in range(n):
-        # графическое отображение ходов
         tur.forward(100)
 
         if (round(tur.xcor()) == 200 and round(tur.ycor()) == 150) \
@@ -102,23 +110,18 @@ def step(tur, player):
     money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
     money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
 
-    # графическое отображение инфы о клетке (Зачем?)
-
-    # cell_info_turtle.clear()
-    # cell_info_turtle.write('{}\nЦена: $ {}'.format(field[player.position].name, field[player.position].price),
-    #                        font=("Arial", 13, "normal"))
-
     if field[player.position].position == 0:
         # Если позиция - "Старт"
         info_turtle.clear()
-        info_turtle.write('Нет доступных действий на клетке "Старт"!', align='center', font=("Arial", 9, "normal"))
+        info_turtle.write('{} попал на клетку "Старт"!'.format(player.name), align='center',
+                          font=("Arial", 9, "normal"))
         money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
         money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
 
     elif field[player.position].position == 4:
         # Если позиция - "Казино"
         while True:
-            choose_kaz = window.textinput('Добро пожаловать в Казино!', '[1] Играть [2] Пас')
+            choose_kaz = window.textinput('Добро пожаловать в Казино!', '[1] Играть\n[2] Пас')
             if choose_kaz == '1':
                 info_turtle.clear()
                 info_turtle.write('{} зашел в Казино!'.format(player.name), align='center', font=("Arial", 9, "normal"))
@@ -198,18 +201,54 @@ def step(tur, player):
 
     elif field[player.position].position == 7:
         # Если позиция - "Тюрьма"
-        print()
+        if n == 0:
+            # tur.color(['red', 'blue'][my_index ^ 1])
+            info_turtle.clear()
+            info_turtle.write('{} сидит в тюрьме!'.format(player.name), align='center', font=("Arial", 9, "normal"))
+            player.release = True
+        else:
+            tur.color('#4E4E4E')
+            player.prison = True
+            info_turtle.clear()
+            info_turtle.write('{} попал в тюрьму!'.format(player.name), align='center', font=("Arial", 9, "normal"))
+
     elif field[player.position].position == 11:
         # Если позиция - "Налоговая"
-        print()
+        info_turtle.clear()
+        info_turtle.write('{} попал в налоговую. Выписываем счёт!'.format(player.name), align='center',
+                          font=("Arial", 9, "normal"))
+
+        tax = 0
+        # считаем сколько клеток пренадлежит игроку и заставляем оплатить 10 процентов от стоимости каждой
+        # + игрок платит за каждый домик (апгрейд) по 1$
+        for i in field:
+            if i.owner == player.name:
+                tax += int(i.price * 0.1) + int(i.upgrade_level*5)
+
+        tax_visualize()  # визуализируем "$ $ $"
+
+        if tax <= player.money:
+            # если достаточно денег для оплаты
+            player.money -= tax
+            info_turtle.clear()
+            info_turtle.write('{} оплатил счета на сумму {}$!'.format(player.name, tax), align='center',
+                              font=("Arial", 9, "normal"))
+
+            money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
+            money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+
+        else:
+            # если недостаточно денег для оплаты
+            end_game(player)
 
     else:
         if field[player.position].owner is None:
             """ Если клетка еще не куплена """
-            while True:
-                choose = window.textinput('Выбор действия', '[1] Купить [2] Пас')
-                if choose == '1':
-                    if player.money >= field[player.position].price:
+            if player.money >= field[player.position].price:
+                while True:
+                    choose = window.textinput('Выбор действия', '[1] Купить за {}$\n[2] Пас'.
+                                              format(field[player.position].price))
+                    if choose == '1':
                         # дальше - махинации с отпечатком черепашки на клетка для наглядности покупки
                         some_stamp_colors = ['CornflowerBlue', 'LightCoral', 'Red', 'Blue']
                         tur.turtlesize(2, 2, 10)
@@ -230,46 +269,109 @@ def step(tur, player):
                         info_turtle.write('{} купил {}!'.format(player.name, field[player.position].name),
                                           align='center', font=("Arial", 9, "normal"))
                         break
-                    else:
+
+                    elif choose == '2':
                         info_turtle.clear()
-                        info_turtle.write('Недостаточно денег для покупки!', align='center',
+                        info_turtle.write('{} воздержался от покупки!'.format(player.name), align='center',
                                           font=("Arial", 9, "normal"))
                         break
-
-                elif choose == '2':
-                    info_turtle.clear()
-                    info_turtle.write('{} воздержался от покупки!'.format(player.name), align='center',
-                                      font=("Arial", 9, "normal"))
-                    break
-                else:
-                    info_turtle.clear()
-                    info_turtle.write('Введите коректные данные!', align='center', font=("Arial", 9, "normal"))
-                    continue
+                    else:
+                        info_turtle.clear()
+                        info_turtle.write('Введите коректные данные!', align='center', font=("Arial", 9, "normal"))
+                        continue
+            else:
+                info_turtle.clear()
+                info_turtle.write('Недостаточно денег для покупки!', align='center', font=("Arial", 9, "normal"))
 
         elif field[player.position].owner == player.name:
             """ Если клетка уже куплена вами """
             info_turtle.clear()
-            info_turtle.write('Вы попали на свою клетку!', align='center', font=("Arial", 9, "normal"))
+            info_turtle.write('{} попал на свою клетку!'.format(player.name), align='center',
+                              font=("Arial", 9, "normal"))
             while True:
                 upgrade_price = field[player.position].rent * 2
-                print(upgrade_price)
-                choose = window.textinput('Выбор действия', '[1] Улучшить ({}$) [2] Пас'.format(upgrade_price))
-                # Тут будет функционал улучшение клетки. По типу постройки домов в оригинальной монополии
-                # Но улучшать можно только когда вы на своей клетке
 
-                if choose == '1':
-                    if player.money < upgrade_price:
-                        info_turtle.clear()
-                        info_turtle.write('Не хватает денег на улучшение!', align='center', font=("Arial", 9, "normal"))
-                    else:
-                        # else - если хватает денег на улучшение
-                        if field[player.position].upgrade_level == 4:
+                if field[player.position].upgrade_level == 5:
+                    info_turtle.clear()
+                    info_turtle.write('Да тут монополия максимального уровня!', align='center',
+                                      font=("Arial", 9, "normal"))
+                    break
+
+                elif field[player.position].upgrade_level == 4:
+
+                    monopoly = True
+                    all_monopolies = [[1, 2, 3], [5, 6], [8, 9, 10], [12, 13]]
+
+                    for m in all_monopolies:
+                        if player.position in m:
+                            for i in m:
+                                if field[i].owner == player.name:
+                                    pass
+                                else:
+                                    monopoly = False
+                                    break
+
+                    if monopoly:
+                        print('YOU HAVE MONOPOLY!')
+
+                        monopoly_price = int(field[player.position].price*5)
+
+                        if player.money >= monopoly_price:
+                            choose_m = window.textinput('Выбор действия (М)', '[1] Улучшить за {}$\n[2] Пас'.
+                                                        format(monopoly_price))
                             info_turtle.clear()
-                            info_turtle.write('{} имеет максимальный уровень улучшения!'.
-                                              format(player.name, field[player.position].name),
+                            info_turtle.write('{} может сделать монополию!'.format(player.name),
                                               align='center', font=("Arial", 9, "normal"))
 
+                            if choose_m == '1':
+                                player.money -= monopoly_price
+                                field[player.position].rent = int(field[player.position].rent*2)
+                                monopolization(tur)
+                                field[player.position].upgrade_level += 1
+
+                                money_turtles[my_index].clear()
+                                money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+                                info_turtle.clear()
+                                info_turtle.write('{} сделал монополию!'.format(player.name), align='center',
+                                                  font=("Arial", 9, "normal"))
+                                break
+
+                            elif choose_m == '2':
+                                info_turtle.clear()
+                                info_turtle.write('{} воздержался от улучшения!'.format(player.name), align='center',
+                                                  font=("Arial", 9, "normal"))
+                                break
+
+                            else:
+                                info_turtle.clear()
+                                info_turtle.write('Введите коректные данные!', align='center',
+                                                  font=("Arial", 9, "normal"))
+                                continue
+
+                        elif player.money < monopoly_price:
+                            info_turtle.clear()
+                            info_turtle.write('{} недостаточно денег для монополии!'.format(player.name),
+                                              align='center', font=("Arial", 9, "normal"))
+
+                    else:
+                        info_turtle.clear()
+                        info_turtle.write('{} имеет максимальный уровень улучшения!'.
+                                          format(field[player.position].name),
+                                          align='center', font=("Arial", 9, "normal"))
+                        break
+
+                elif field[player.position].upgrade_level < 4:
+                    choose = window.textinput('Выбор действия', '[1] Улучшить за {}$\n[2] Пас'.format(upgrade_price))
+                    # Тут будет функционал улучшение клетки. По типу постройки домов в оригинальной монополии
+                    # Но улучшать можно только когда вы на своей клетке
+
+                    if choose == '1':
+                        if player.money < upgrade_price:
+                            info_turtle.clear()
+                            info_turtle.write('Не хватает денег на улучшение!', align='center',
+                                              font=("Arial", 9, "normal"))
                         else:
+                            # если хватает денег на улучшение
                             upgrade_cell(tur, field[player.position].upgrade_level)  # рисуем улучшение
 
                             if field[player.position].upgrade_level == 0:
@@ -294,40 +396,45 @@ def step(tur, player):
                             money_turtles[my_index].clear()
                             money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
 
-                    break
-                elif choose == '2':
-                    info_turtle.clear()
-                    info_turtle.write('{} воздержался от улучшения!'.format(player.name), align='center',
-                                      font=("Arial", 9, "normal"))
-                    break
-                else:
-                    info_turtle.clear()
-                    info_turtle.write('Введите коректные данные!', align='center', font=("Arial", 9, "normal"))
-                    continue
+                        break
+                    elif choose == '2':
+                        info_turtle.clear()
+                        info_turtle.write('{} воздержался от улучшения!'.format(player.name), align='center',
+                                          font=("Arial", 9, "normal"))
+                        break
+                    else:
+                        info_turtle.clear()
+                        info_turtle.write('Введите коректные данные!', align='center', font=("Arial", 9, "normal"))
+                        continue
 
         else:
             """ Если клетка куплена кем-то другим """
-
             rent = field[player.position].rent
 
             if player.money < rent:
                 print('{} проиграл'.format(player.name))
+                end_game(player)
 
             else:
                 player.money -= rent  # забираем у того, кто наступил на чужую клетку, бабки
 
                 other_player = players[my_index]
-                other_player.money += rent
 
-                info_turtle.clear()
-                info_turtle.write('{} заплатил {} {}$ за аренду!'.format(player.name, other_player.name, rent),
-                                  align='center', font=("Arial", 9, "normal"))
+                if other_player.position == 7:
+                    # если владелец клетки в тюрьме - мы ему не платим!
+                    info_turtle.clear()
+                    info_turtle.write('Владелец в тюрьме!', align='center', font=("Arial", 9, "normal"))
+                else:
+                    other_player.money += rent
+                    info_turtle.clear()
+                    info_turtle.write('{} заплатил {} {}$ за аренду!'.format(player.name, other_player.name, rent),
+                                      align='center', font=("Arial", 9, "normal"))
 
-                money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
-                money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
+                    money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
+                    money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
 
-                money_turtles[my_index ^ 1].clear()  # так же и для другого игрока
-                money_turtles[my_index ^ 1].write('$ {}'.format(other_player.money), font=("Arial", 15, "normal"))
+                    money_turtles[my_index ^ 1].clear()  # так же и для другого игрока
+                    money_turtles[my_index ^ 1].write('$ {}'.format(other_player.money), font=("Arial", 15, "normal"))
 
     write_hod(teh_turtle, my_index)  # наглядность чей ход (зелененькая стрелочка возле черепашки)
     window.listen()
@@ -412,6 +519,44 @@ def casino_t_create():
     return new_t
 
 
+def tax_visualize():
+    tax_turtle.color('#126626')
+    tax_turtle.up()
+    tax_turtle.goto(-20, -60)
+    tax_turtle.write('$', align='center', font=("Arial", 25, "bold"))
+    sleep(0.4)
+    tax_turtle.goto(0, -60)
+    tax_turtle.write('$', align='center', font=("Arial", 25, "bold"))
+    sleep(0.4)
+    tax_turtle.goto(20, -60)
+    tax_turtle.write('$', align='center', font=("Arial", 25, "bold"))
+    sleep(1)
+    tax_turtle.clear()
+
+
+def monopolization(t):
+    """ Если у игрока куплена монополия (2 или 3 клетки подряд) и полностью улучшена текущая клетка"""
+    colors = ['Red', 'Blue']
+
+    t.speed(0)
+    t.goto(t.xcor(), t.ycor()-20)
+    t.color('#AF00E0')
+    t.write('M', align='center', font=("Arial", 25, "bold"))
+
+    t.goto(t.xcor(), t.ycor()+20)
+    t.color(colors[my_index ^ 1])
+    t.speed(10)
+
+
+def end_game(p):
+    info_turtle.clear()
+    info_turtle.color('#BA02F2')
+    info_turtle.write('{} победил!'.format(players[players.index(p) ^ 1].name), align='center',
+                      font=("Arial", 15, "bold"))
+    sleep(10)
+    window.bye()
+
+
 if __name__ == '__main__':
 
     teh_turtle = create_turtle()
@@ -420,6 +565,7 @@ if __name__ == '__main__':
     info_turtle = create_turtle()
     cell_info_turtle = create_turtle()
     casino_turtle = casino_t_create()
+    tax_turtle = casino_t_create()
 
     info_turtle.goto(-0, -93)
     cell_info_turtle.goto(20, -70)
@@ -456,7 +602,7 @@ if __name__ == '__main__':
     window.bgcolor(245, 255, 245)
 
     why()  # ваау. рисуем каждый раз новую карту при запуске программы ( не смог в скрин (пиксели неточные) )
-    # window.bgpic('Screenshot_2.png') - так должно быть в идеале. используем бекграунд пикчу как карту
+    # window.bgpic('pic.png') - так должно быть в идеале. используем бекграунд пикчу как карту
 
     # В окне запрашиваем имена игроков
     name_1 = window.textinput('Монополия', 'Введите имя первого игрока:')
@@ -477,6 +623,8 @@ if __name__ == '__main__':
     # Делаем дефолтный первый мув
     first_move(turtle_1, 0, name_1)
     first_move(turtle_2, 25, name_2)
+    turtle_1.speed(1)
+    turtle_2.speed(1)
 
     # пишем начальный кэш каждого игрока
     money_turtle_1.goto(50, 58)
@@ -488,8 +636,6 @@ if __name__ == '__main__':
     write_hod(teh_turtle, my_index)
     teh_turtle.showturtle()  # теперь видно кто ходит первый
     window.onkeypress(lambda: step(turtles[my_index], players[my_index]), 'space')
-    # window.onkeypress(lambda: step(turtle_1, random.randint(1, 5)), 'g')
-    # window.onkeypress(lambda: step(turtle_2, random.randint(1, 5)), 'h')
     window.listen()
 
-    window.exitonclick()
+    window.mainloop()
