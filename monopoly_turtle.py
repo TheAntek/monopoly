@@ -1,9 +1,3 @@
-import turtle
-from monopoly.mapa import *
-from time import sleep
-import random
-
-
 class Cell:
     """ Клас клетки. Имеет название, позицию на поле, цену покупки и владельца"""
     def __init__(self, title, position, price, rent):
@@ -15,15 +9,17 @@ class Cell:
         self.upgrade_level = 0
 
     def info(self):
-        print('{}. Позиция - {}. Цена - {}. Владелец - {}'.format(self.name, self.position, self.price, self.owner))
+        pass
+        # print('{}. Позиция - {}. Цена - {}. Владелец - {}'.format(self.name, self.position, self.price, self.owner))
 
     def purchase(self, new_owner):
         """ Функция покупки клетки """
         if self.owner is None:
             self.owner = new_owner
-            print('Клетка куплена игроком {}'.format(new_owner))
+            # print('Клетка куплена игроком {}'.format(new_owner))
         else:
-            print('Клетка имеет владельца!')
+            pass
+            # print('Клетка имеет владельца!')
 
 
 class Player:
@@ -38,15 +34,15 @@ class Player:
     def move(self, movement):
         """ Один ход. Позиция игрока += рандомное число"""
         self.position += movement
-        print(self.position)
-        print('Вы походили на {}'.format(movement))
+        # print(self.position)
 
         if self.position >= 14:  # таким образом начинаем круг сначала
-            self.position -= 14  # позиции опять начинают считаться с нуль (20->0, 23->3)
+            self.position -= 14  # позиции опять начинают считаться с нуль (14->0, 17->3)
             self.money += 100  # когда прошли круг - начисляются деньги
 
     def info(self):
-        print('{}. Деньги - {}. Позиция {}.'.format(self.name, self.money, self.position))
+        pass
+        # print('{}. Деньги - {}. Позиция {}.'.format(self.name, self.money, self.position))
 
 
 def player_create(color):
@@ -70,7 +66,6 @@ def first_move(tur, mistake, name):
     tur.forward(12)
     tur.left(90)
     tur.write(name, font=("Arial", 15, "normal"))
-    # tur.goto(-200, 150)
     tur.goto(-214 + mistake, 165 - mistake)
 
 
@@ -82,7 +77,7 @@ def step(tur, player):
     if tur.position() == (-214, 165) or tur.position() == (-189, 140):
         tur.goto(-200, 150)
 
-    n = random.randint(1, 5)  # ход на n клеток
+    n = randint(1, 5)  # ход на n клеток
 
     if player.prison:
         n = 0
@@ -312,7 +307,6 @@ def step(tur, player):
                                     break
 
                     if monopoly:
-                        print('YOU HAVE MONOPOLY!')
 
                         monopoly_price = int(field[player.position].price*5)
 
@@ -412,7 +406,6 @@ def step(tur, player):
             rent = field[player.position].rent
 
             if player.money < rent:
-                print('{} проиграл'.format(player.name))
                 end_game(player)
 
             else:
@@ -451,7 +444,6 @@ def write_hod(t_t, mi):
 def upgrade_cell(t, lvl):
     """ Улучшение клетки """
     upgrade_stamp_colors = ['#66D5B3', '#F8DE8D', 'Red', 'Blue']
-    print(lvl)
     if lvl == 0:
         t.goto(t.xcor() - 10, t.ycor() + 10)
         t.shape('square')
@@ -502,7 +494,7 @@ def create_turtle():
 def casino(money):
     """ рандомно определяем выиграш """
     new_list = [0, int(money/2), money, int(money*1.5), int(money*2)]
-    winning = random.choice(new_list)
+    winning = choice(new_list)
     return winning
 
 
@@ -558,7 +550,18 @@ def end_game(p):
 
 
 if __name__ == '__main__':
+    import turtle
+    from monopoly.mapa import *
+    from time import sleep
+    from random import randint, choice
 
+    # Создаем окно
+    window = turtle.Screen()
+    window.title('Монополия')
+    window.colormode(255)
+    window.bgcolor(245, 255, 245)
+
+    # создаем черепашек
     teh_turtle = create_turtle()
     money_turtle_1 = create_turtle()
     money_turtle_2 = create_turtle()
@@ -568,16 +571,17 @@ if __name__ == '__main__':
     tax_turtle = casino_t_create()
 
     info_turtle.goto(-0, -93)
+    info_turtle.color('#0B2C0B')
     cell_info_turtle.goto(20, -70)
     info_turtle.write('Добро пожаловать! Нажмите <Space>, чтобы походить!', align='center', font=("Arial", 8, "normal"))
 
-    # каждой черепашке, ответсвенной за деньги даем свой цвет, координаты. Записываем начальный капитал.
     teh_turtle.color('dark green')
     money_turtle_1.color('Red')
     money_turtle_2.color('Blue')
 
     money_turtles = [money_turtle_2, money_turtle_1]  # созд. список, чтобы с помощью my_index вызывать нужную черепашку
 
+    # создание клеток
     cell_0 = Cell('Старт', 0, None, None)
     cell_1 = Cell('1-клетка', 1, 10, 1)
     cell_2 = Cell('2-клетка', 2, 20, 2)
@@ -594,12 +598,6 @@ if __name__ == '__main__':
     cell_13 = Cell('13-клетка', 13, 100, 10)
     field = [cell_0, cell_1, cell_2, cell_3, cell_4, cell_5, cell_6, cell_7, cell_8, cell_9, cell_10,
              cell_11, cell_12, cell_13]
-
-    # Создаем окно
-    window = turtle.Screen()
-    window.title('Монополия')
-    window.colormode(255)
-    window.bgcolor(245, 255, 245)
 
     why()  # ваау. рисуем каждый раз новую карту при запуске программы ( не смог в скрин (пиксели неточные) )
     # window.bgpic('pic.png') - так должно быть в идеале. используем бекграунд пикчу как карту

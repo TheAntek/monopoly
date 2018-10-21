@@ -4,6 +4,7 @@ def why():
     my.speed(0)
     my.hideturtle()
 
+    my.color('#023A02')
     my.up()
     my.goto(-250, 200)
     my.down()
@@ -63,6 +64,7 @@ def why():
 
     my.up()
     my.goto(-200, 180)
+    my.color('#032A03')
     my.write('Старт', align='center', font=("Arial", 13, "normal"))
     my.goto(-100, 180)
     my.write('1', align='center', font=("Arial", 13, "normal"))
