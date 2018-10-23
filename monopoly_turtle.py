@@ -234,13 +234,17 @@ def step(tur, player):
     if tur.position() == (-214, 165) or tur.position() == (-189, 140):
         tur.goto(-200, 150)
 
-    n = randint(1, 5)  # ход на n клеток
+    n = randint(1, 6)  # ход на n клеток
 
     if player.prison:
         n = 0
         player.prison = False
+
+    dice(dice_turtle, n)  # визуализация кубика
+
     # если игрок был в тюрьме - на этот ход он выходит и меняет цвет из серого на свой
     if player.release:
+        prison_turtle.clear()
         tur.color(['red', 'blue'][my_index])
         player.release = False
 
@@ -306,17 +310,7 @@ def step(tur, player):
                         winning = casino(player_bet)  # бабки + или -
                         player.money += winning
 
-                        casino_turtle.up()
-                        casino_turtle.goto(1, -51)
-                        casino_turtle.color('#336F24')
-                        casino_turtle.write('$', align='center', font=("Arial", 20, "bold"))
-                        casino_turtle.goto(0, -60)
-                        casino_turtle.down()
-                        casino_turtle.color('gold')
-                        casino_turtle.circle(25)
-                        casino_turtle.color('#1D620C')
-                        casino_turtle.circle(25)
-                        # sleep(1)
+                        casino_visual(casino_turtle)
 
                         if winning < player_bet:
                             info_turtle.clear()
@@ -333,7 +327,6 @@ def step(tur, player):
                             info_turtle.write('{} выиграл {}$ в Казино!'.format(player.name, winning-player_bet),
                                               align='center', font=("Arial", 9, "normal"))
 
-                        casino_turtle.clear()
                         money_turtles[my_index].clear()  # чистим поле, там где деньги и записываем обновленные деньги
                         money_turtles[my_index].write('$ {}'.format(player.money), font=("Arial", 15, "normal"))
 
@@ -359,6 +352,7 @@ def step(tur, player):
             info_turtle.write('{} сидит в тюрьме!'.format(player.name), align='center', font=("Arial", 9, "normal"))
             player.release = True
         else:
+            prison_visual(prison_turtle)
             tur.color('#4E4E4E')
             player.prison = True
             info_turtle.clear()
@@ -372,10 +366,10 @@ def step(tur, player):
 
         tax = 0
         # считаем сколько клеток пренадлежит игроку и заставляем оплатить 10 процентов от стоимости каждой
-        # + игрок платит за каждый домик (апгрейд) по 1$
+        # + игрок платит за каждый домик (апгрейд) по 5$ + 10 за каждую клетку
         for i in field:
             if i.owner == player.name:
-                tax += int(i.price * 0.1) + int(i.upgrade_level*5)
+                tax += 10 + int(i.price * 0.1) + int(i.upgrade_level*5)
 
         tax_visualize()  # визуализируем "$ $ $"
 
@@ -476,7 +470,7 @@ def step(tur, player):
 
                             if choose_m == '1':
                                 player.money -= monopoly_price
-                                field[player.position].rent = int(field[player.position].rent*2)
+                                field[player.position].rent = int(field[player.position].rent*20)
                                 monopolization(tur)
                                 field[player.position].upgrade_level += 1
 
@@ -663,22 +657,74 @@ def casino_t_create():
     new_t.shape('circle')
     new_t.color('gold')
     new_t.width(10)
-    new_t.goto(0, -60)
+    new_t.goto(200, 125)
     new_t.down()
     return new_t
+
+
+def casino_visual(t):
+    t.up()
+    t.goto(201, 138)  # +1 +9
+    t.color('white')  # #336F24
+    t.write('$', align='center', font=("Arial", 13, "bold"))
+    t.goto(200, 125)
+    t.down()
+    t.color('gold')
+    t.circle(25)
+    t.color('#1D620C')
+    t.circle(25)
+    t.clear()
+
+
+def prison_turtle_create():
+    t = turtle.Turtle()
+    t.up()
+    t.hideturtle()
+    t.speed(0)
+    t.width(2)
+    t.goto(180, -130)  # 150 - 250. 100/4 = 25. -> 175, 200, 225
+
+    return t
+
+
+def prison_visual(t):
+    t.goto(180, -130)
+    t.down()
+    t.goto(180, -170)
+    t.up()
+
+    t.goto(190, -130)
+    t.down()
+    t.goto(190, -170)
+    t.up()
+
+    t.goto(200, -130)
+    t.down()
+    t.goto(200, -170)
+    t.up()
+
+    t.goto(210, -130)
+    t.down()
+    t.goto(210, -170)
+    t.up()
+
+    t.goto(220, -130)
+    t.down()
+    t.goto(220, -170)
+    t.up()
 
 
 def tax_visualize():
     tax_turtle.color('#126626')
     tax_turtle.up()
-    tax_turtle.goto(-20, -60)
-    tax_turtle.write('$', align='center', font=("Arial", 25, "bold"))
+    tax_turtle.goto(-219, -188)
+    tax_turtle.write('$', align='center', font=("Arial", 21, "bold"))
     sleep(0.4)
-    tax_turtle.goto(0, -60)
-    tax_turtle.write('$', align='center', font=("Arial", 25, "bold"))
+    tax_turtle.goto(-199, -188)
+    tax_turtle.write('$', align='center', font=("Arial", 21, "bold"))
     sleep(0.4)
-    tax_turtle.goto(20, -60)
-    tax_turtle.write('$', align='center', font=("Arial", 25, "bold"))
+    tax_turtle.goto(-179, -188)
+    tax_turtle.write('$', align='center', font=("Arial", 21, "bold"))
     sleep(1)
     tax_turtle.clear()
 
@@ -694,16 +740,112 @@ def monopolization(t):
 
     t.goto(t.xcor(), t.ycor()+20)
     t.color(colors[my_index ^ 1])
-    t.speed(10)
+    t.speed(1)
 
 
 def end_game(p):
+    p.money = 0
+    money_turtles[my_index].clear()
+    money_turtles[my_index].write('$ {}'.format(p.money), font=("Arial", 15, "normal"))
     info_turtle.clear()
     info_turtle.color('#BA02F2')
     info_turtle.write('{} победил!'.format(players[players.index(p) ^ 1].name), align='center',
                       font=("Arial", 15, "bold"))
     sleep(10)
     window.bye()
+
+
+def dice_create():
+    t = turtle.Turtle()
+    t.speed(0)
+    t.shape('square')
+    t.fillcolor('white')
+    t.hideturtle()
+    t.up()
+    t.goto(0, -40)
+    t.down()
+
+    return t
+
+
+def dice(t, n):
+    """ Визуализация игрального кубика """
+
+    x = t.xcor()
+    y = t.ycor()
+    t.clear()
+
+    t.shapesize(2, 2, 2)
+    t.shape('square')
+
+    if n == 0:
+        t.color('black', '#D9D7D7')
+        t.stamp()
+        t.goto(x+1, y-16)
+        t.write('T', align='center', font=("Arial", 20, "normal"))
+        t.goto(x, y)
+        return
+
+    t.color('black', 'white')
+    t.stamp()
+
+    t.shapesize(0.3, 0.3, 0.3)
+    t.color('black')
+    t.shape('circle')
+
+    if n == 1:
+        t.stamp()
+
+    elif n == 2:
+        t.goto(x-10, y+10)
+        t.stamp()
+        t.goto(x+10, y-10)
+        t.stamp()
+
+    elif n == 3:
+        t.stamp()
+        t.goto(x-12, y+12)
+        t.stamp()
+        t.goto(x+12, y-12)
+        t.stamp()
+
+    elif n == 4:
+        t.goto(x-12, y+12)
+        t.stamp()
+        t.goto(x-12, y-12)
+        t.stamp()
+        t.goto(x+12, y-12)
+        t.stamp()
+        t.goto(x+12, y+12)
+        t.stamp()
+
+    elif n == 5:
+        t.goto(x-12, y+12)
+        t.stamp()
+        t.goto(x-12, y-12)
+        t.stamp()
+        t.goto(x+12, y-12)
+        t.stamp()
+        t.goto(x+12, y+12)
+        t.stamp()
+        t.goto(x, y)
+        t.stamp()
+
+    elif n == 6:
+        t.goto(x-12, y+12)
+        t.stamp()
+        t.goto(x-12, y-12)
+        t.stamp()
+        t.goto(x+12, y-12)
+        t.stamp()
+        t.goto(x+12, y+12)
+        t.stamp()
+        t.goto(x, y+12)
+        t.stamp()
+        t.goto(x, y-12)
+        t.stamp()
+
+    t.goto(x, y)
 
 
 if __name__ == '__main__':
@@ -724,7 +866,9 @@ if __name__ == '__main__':
     info_turtle = create_turtle()
     cell_info_turtle = create_turtle()
     casino_turtle = casino_t_create()
-    tax_turtle = casino_t_create()
+    tax_turtle = create_turtle()
+    dice_turtle = dice_create()
+    prison_turtle = prison_turtle_create()
 
     info_turtle.goto(-0, -93)
     info_turtle.color('#0B2C0B')
